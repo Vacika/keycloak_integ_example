@@ -1,0 +1,28 @@
+version: "3"
+
+services:
+  keycloak:
+    build: ./keycloak
+    image: keycloak-imported-realm
+    container_name: keycloak
+    ports:
+      - "8080:8080"
+      - "9990:9990"
+    volumes:
+      - ./keycloak/tmp-volume:/tmp
+    environment:
+      - KEYCLOAK_USER=admin
+      - KEYCLOAK_PASSWORD=admin
+      - KEYCLOAK_IMPORT=/opt/jboss/keycloak/imports/realm-export.json -Dkeycloak.profile.feature.upload_scripts=enabled
+      - KEYCLOAK_MIGRATION_STRATEGY=OVERWRITE_EXISTING
+  spring-app:
+    build: .
+    image: spring-app-image
+    container_name: spring-app
+    depends_on: [ keycloak ]
+    ports:
+      - "8081:8081"
+    environment:
+      - KEYCLOAK_SECRET=jYeGYhCzMxoDEXitCQaW35UvNSJdx8Cs
+      - KEYCLOAK_LOGIN_URL=http://localhost:8080/auth/realms/DemoKeycloakIntegration/protocol/openid-connect/token
+      - KEYCLOAK_AUTH_SERVER=http://localhost:8080/auth
